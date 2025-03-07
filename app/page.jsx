@@ -31,7 +31,7 @@ export default function Home() {
   };
 
   return (
-    <div className="p-4 w-full bg-white rounded-lg shadow">
+    <div className="p-4 w-full bg-white text-black rounded-lg shadow">
       <div className="mb-6">
         <h1 className="text-xl font-bold text-gray-800 mb-2">Simulador de Lançamento Pago</h1>
         <p className="text-gray-600">Projeções financeiras para seu lançamento de produtos</p>
