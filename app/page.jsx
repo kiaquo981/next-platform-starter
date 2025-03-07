@@ -44,7 +44,7 @@ export default function Home() {
   // Aba ativa
   const [abaAtiva, setAbaAtiva] = useState('parametros');
   
-  // Calcular faturamento de ingressos
+  // Cálculos
   const calcularFaturamentoIngressos = () => {
     let total = 0;
     lotes.forEach(lote => {
@@ -54,13 +54,11 @@ export default function Home() {
     return total;
   };
   
-  // Calcular faturamento de gravações
   const calcularFaturamentoGravacoes = () => {
     const vendasGravacoes = Math.round(ingressos * (conversaoGravacoes / 100));
     return vendasGravacoes * precoGravacoes;
   };
   
-  // Calcular vendas do produto principal
   const calcularVendasProdutoPrincipal = () => {
     const vendasGravacoes = Math.round(ingressos * (conversaoGravacoes / 100));
     const vendasProdutoCashback = Math.round(vendasGravacoes * (conversaoCashback / 100));
@@ -75,13 +73,11 @@ export default function Home() {
     };
   };
   
-  // Calcular faturamento do produto principal
   const calcularFaturamentoProdutoPrincipal = () => {
     const vendas = calcularVendasProdutoPrincipal();
     return vendas.cashback * precoCashback + vendas.normal * precoProdutoPrincipal + vendas.boleto * precoBoleto;
   };
   
-  // Calcular vendas e faturamento de Order Bumps
   const calcularVendasOrderBumps = () => {
     const vendasProdutoPrincipal = calcularVendasProdutoPrincipal().total;
     const vendasOB1 = Math.round(vendasProdutoPrincipal * (conversaoOrderBump1 / 100));
@@ -96,14 +92,12 @@ export default function Home() {
     };
   };
   
-  // Calcular vendas e faturamento de Upsell
   const calcularVendasUpsell = () => {
     const vendasProdutoPrincipal = calcularVendasProdutoPrincipal().total;
     const vendasUpsell = Math.round(vendasProdutoPrincipal * (conversaoUpsell / 100));
     return { quantidade: vendasUpsell, faturamento: vendasUpsell * precoUpsell };
   };
   
-  // Calcular vendas e faturamento de Downsell
   const calcularVendasDownsell = () => {
     const vendasProdutoPrincipal = calcularVendasProdutoPrincipal().total;
     const naoCompradores = ingressos - vendasProdutoPrincipal;
@@ -111,12 +105,10 @@ export default function Home() {
     return { quantidade: vendasDownsell, faturamento: vendasDownsell * precoDownsell };
   };
   
-  // Calcular faturamento total na captação
   const calcularFaturamentoCaptacao = () => {
     return calcularFaturamentoIngressos() + calcularFaturamentoGravacoes();
   };
   
-  // Calcular faturamento total
   const calcularFaturamentoTotal = () => {
     return calcularFaturamentoCaptacao() + 
            calcularFaturamentoProdutoPrincipal() + 
@@ -125,12 +117,10 @@ export default function Home() {
            calcularVendasDownsell().faturamento;
   };
   
-  // Calcular ROAS (Return On Ad Spend)
   const calcularROAS = () => {
     return orcamentoTrafico > 0 ? calcularFaturamentoTotal() / orcamentoTrafico : 0;
   };
   
-  // Formatar valor monetário
   const formatarDinheiro = (valor) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -180,9 +170,63 @@ export default function Home() {
                 onChange={(e) => setIngressos(Number(e.target.value))}
                 className="w-full"
               />
-              <div className="bg-blue-50 p-2 rounded w-32 text-center text-gray-700">
+              <div className="bg-blue-50 p-2 rounded">
                 <span className="font-medium">{ingressos}</span> ingressos
               </div>
+            </div>
+          </div>
+          
+          <div className="border p-4 rounded-lg">
+            <h3 className="text-lg font-medium text-gray-800 mb-3">Distribuição e Preço dos Lotes</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {lotes.map((lote, index) => (
+                <div key={index} className="border p-3 rounded bg-gray-50">
+                  <h4 className="font-medium text-blue-800">{lote.nome}</h4>
+                  <div className="mt-2">
+                    <label className="block text-sm text-gray-700 mb-1">Percentual do Lote</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min="1"
+                        max="100"
+                        value={lote.percentual}
+                        onChange={(e) => {
+                          const novosLotes = [...lotes];
+                          novosLotes[index].percentual = Number(e.target.value);
+                          setLotes(novosLotes);
+                        }}
+                        className="w-20 p-1 border rounded text-gray-800"
+                      />
+                      <span className="text-gray-700">{lote.percentual}%</span>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-2">
+                    <label className="block text-sm text-gray-700 mb-1">Preço do Lote</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min="1"
+                        value={lote.preco}
+                        onChange={(e) => {
+                          const novosLotes = [...lotes];
+                          novosLotes[index].preco = Number(e.target.value);
+                          setLotes(novosLotes);
+                        }}
+                        className="w-20 p-1 border rounded text-gray-800"
+                      />
+                      <span className="text-gray-700">{formatarDinheiro(lote.preco)}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-3 text-sm">
+                    <div className="flex justify-between text-gray-700">
+                      <span>Vendas estimadas:</span>
+                      <span>{Math.round(ingressos * (lote.percentual / 100))} ingressos</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
           
@@ -190,12 +234,12 @@ export default function Home() {
             <h4 className="font-medium text-gray-800">Resultados de Ingressos</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
               <div>
-                <span className="text-sm text-gray-600">Faturamento Total de Ingressos</span>
-                <p className="text-xl font-bold text-gray-800">{formatarDinheiro(calcularFaturamentoIngressos())}</p>
+                <span className="text-sm text-gray-600">Ticket Médio de Ingressos</span>
+                <p className="text-xl font-bold text-gray-800">{formatarDinheiro(calcularFaturamentoIngressos() / ingressos)}</p>
               </div>
               <div>
-                <span className="text-sm text-gray-600">Ticket Médio</span>
-                <p className="text-xl font-bold text-gray-800">{formatarDinheiro(calcularFaturamentoIngressos() / ingressos)}</p>
+                <span className="text-sm text-gray-600">Faturamento Total de Ingressos</span>
+                <p className="text-xl font-bold text-gray-800">{formatarDinheiro(calcularFaturamentoIngressos())}</p>
               </div>
             </div>
           </div>
@@ -219,7 +263,6 @@ export default function Home() {
                     onChange={(e) => setPrecoGravacoes(Number(e.target.value))}
                     className="w-24 p-1 border rounded text-gray-800"
                   />
-                  <span className="text-gray-700">{formatarDinheiro(precoGravacoes)}</span>
                 </div>
               </div>
               <div>
@@ -233,20 +276,7 @@ export default function Home() {
                     onChange={(e) => setConversaoGravacoes(Number(e.target.value))}
                     className="w-full"
                   />
-                  <span className="w-12 text-center text-gray-700">{conversaoGravacoes}%</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="mt-4 bg-gray-50 p-3 rounded">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <span className="text-sm text-gray-600">Vendas Estimadas</span>
-                  <p className="font-medium text-gray-800">{Math.round(ingressos * (conversaoGravacoes / 100))} unidades</p>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-600">Faturamento</span>
-                  <p className="font-medium text-gray-800">{formatarDinheiro(calcularFaturamentoGravacoes())}</p>
+                  <span>{conversaoGravacoes}%</span>
                 </div>
               </div>
             </div>
@@ -257,7 +287,7 @@ export default function Home() {
             <h3 className="text-lg font-medium mb-3 text-gray-800">Produto Principal</h3>
             
             {/* Versão Normal */}
-            <div className="mt-2 border-b pb-4">
+            <div className="mb-4 pb-4 border-b">
               <h4 className="font-medium text-blue-700">Versão Normal</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                 <div>
@@ -270,7 +300,6 @@ export default function Home() {
                       onChange={(e) => setPrecoProdutoPrincipal(Number(e.target.value))}
                       className="w-24 p-1 border rounded text-gray-800"
                     />
-                    <span className="text-gray-700">{formatarDinheiro(precoProdutoPrincipal)}</span>
                   </div>
                 </div>
                 <div>
@@ -284,21 +313,107 @@ export default function Home() {
                       onChange={(e) => setConversaoNormal(Number(e.target.value))}
                       className="w-full"
                     />
-                    <span className="w-12 text-center text-gray-700">{conversaoNormal}%</span>
+                    <span>{conversaoNormal}%</span>
                   </div>
                 </div>
               </div>
             </div>
             
-            <div className="mt-4 bg-gray-50 p-3 rounded">
-              <div className="grid grid-cols-2 gap-4">
+            {/* Versão com Cashback */}
+            <div className="mb-4 pb-4 border-b">
+              <h4 className="font-medium text-green-700">Versão com Cashback</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                 <div>
-                  <span className="text-sm text-gray-600">Vendas Estimadas</span>
-                  <p className="font-medium text-gray-800">{calcularVendasProdutoPrincipal().total} unidades</p>
+                  <label className="block text-sm text-gray-700 mb-1">Preço com Cashback</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="1"
+                      value={precoCashback}
+                      onChange={(e) => setPrecoCashback(Number(e.target.value))}
+                      className="w-24 p-1 border rounded text-gray-800"
+                    />
+                  </div>
                 </div>
                 <div>
-                  <span className="text-sm text-gray-600">Faturamento</span>
-                  <p className="font-medium text-gray-800">{formatarDinheiro(calcularFaturamentoProdutoPrincipal())}</p>
+                  <label className="block text-sm text-gray-700 mb-1">Taxa de Conversão</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="range"
+                      min="0"
+                      max="50"
+                      value={conversaoCashback}
+                      onChange={(e) => setConversaoCashback(Number(e.target.value))}
+                      className="w-full"
+                    />
+                    <span>{conversaoCashback}%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Order Bumps */}
+            <div className="mb-4 pb-4 border-b">
+              <h4 className="font-medium text-blue-700">Order Bumps</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                <div>
+                  <label className="block text-sm text-gray-700 mb-1">Preço Order Bump 1</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="1"
+                      value={precoOrderBump1}
+                      onChange={(e) => setPrecoOrderBump1(Number(e.target.value))}
+                      className="w-24 p-1 border rounded text-gray-800"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-700 mb-1">Taxa de Conversão</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="range"
+                      min="0"
+                      max="30"
+                      value={conversaoOrderBump1}
+                      onChange={(e) => setConversaoOrderBump1(Number(e.target.value))}
+                      className="w-full"
+                    />
+                    <span>{conversaoOrderBump1}%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Upsell/Downsell */}
+            <div>
+              <h4 className="font-medium text-green-700">Upsell/Downsell</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                <div>
+                  <label className="block text-sm text-gray-700 mb-1">Preço Upsell</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="1"
+                      value={precoUpsell}
+                      onChange={(e) => setPrecoUpsell(Number(e.target.value))}
+                      className="w-24 p-1 border rounded text-gray-800"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-700 mb-1">Taxa de Conversão</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="range"
+                      min="0"
+                      max="20"
+                      value={conversaoUpsell}
+                      onChange={(e) => setConversaoUpsell(Number(e.target.value))}
+                      className="w-full"
+                    />
+                    <span>{conversaoUpsell}%</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -323,7 +438,6 @@ export default function Home() {
                     onChange={(e) => setOrcamentoTrafico(Number(e.target.value))}
                     className="w-32 p-1 border rounded text-gray-800"
                   />
-                  <span className="text-gray-700">{formatarDinheiro(orcamentoTrafico)}</span>
                 </div>
               </div>
               
@@ -338,7 +452,7 @@ export default function Home() {
                     onChange={(e) => setPercentualOrganicoIngressos(Number(e.target.value))}
                     className="w-full"
                   />
-                  <span className="w-12 text-center text-gray-700">{percentualOrganicoIngressos}%</span>
+                  <span>{percentualOrganicoIngressos}%</span>
                 </div>
               </div>
             </div>
@@ -353,6 +467,41 @@ export default function Home() {
                 <div>
                   <span className="text-sm text-gray-600">ROAS</span>
                   <p className="font-medium text-gray-800">{calcularROAS().toFixed(2)}x</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="border p-4 rounded-lg">
+            <h3 className="text-lg font-medium mb-3 text-gray-800">Análise de Cenários</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-blue-50 p-3 rounded">
+                <h4 className="font-medium text-blue-800">Cenário Conservador</h4>
+                <div className="mt-2">
+                  <div className="flex justify-between">
+                    <span>Faturamento Total:</span>
+                    <span>{formatarDinheiro(calcularFaturamentoTotal() * 0.8)}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-green-50 p-3 rounded">
+                <h4 className="font-medium text-green-800">Cenário Realista</h4>
+                <div className="mt-2">
+                  <div className="flex justify-between">
+                    <span>Faturamento Total:</span>
+                    <span>{formatarDinheiro(calcularFaturamentoTotal())}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-purple-50 p-3 rounded">
+                <h4 className="font-medium text-purple-800">Cenário Otimista</h4>
+                <div className="mt-2">
+                  <div className="flex justify-between">
+                    <span>Faturamento Total:</span>
+                    <span>{formatarDinheiro(calcularFaturamentoTotal() * 1.2)}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -403,12 +552,8 @@ export default function Home() {
                 <span className="font-medium text-gray-800">{formatarDinheiro(calcularVendasOrderBumps().faturamentoTotal)}</span>
               </div>
               <div className="flex justify-between py-2 border-b">
-                <span className="text-gray-700">Faturamento Upsell:</span>
-                <span className="font-medium text-gray-800">{formatarDinheiro(calcularVendasUpsell().faturamento)}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b">
-                <span className="text-gray-700">Faturamento Downsell:</span>
-                <span className="font-medium text-gray-800">{formatarDinheiro(calcularVendasDownsell().faturamento)}</span>
+                <span className="text-gray-700">Faturamento Upsell/Downsell:</span>
+                <span className="font-medium text-gray-800">{formatarDinheiro(calcularVendasUpsell().faturamento + calcularVendasDownsell().faturamento)}</span>
               </div>
               <div className="flex justify-between py-2 font-bold">
                 <span className="text-gray-800">Faturamento Total:</span>
@@ -417,32 +562,40 @@ export default function Home() {
             </div>
           </div>
           
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <h3 className="font-medium mb-3 text-gray-800">Insights</h3>
-            <ul className="space-y-2 text-sm">
-              <li className="flex items-start gap-2">
-                <span className="text-blue-600">→</span>
-                <span className="text-gray-700">
-                  {calcularFaturamentoCaptacao() > orcamentoTrafico ? 
-                    `A fase de captação já gerou ${formatarDinheiro(calcularFaturamentoCaptacao())}, superando o investimento em tráfego de ${formatarDinheiro(orcamentoTrafico)}.` : 
-                    `A fase de captação gerou ${formatarDinheiro(calcularFaturamentoCaptacao())}, representando ${((calcularFaturamentoCaptacao() / orcamentoTrafico) * 100).toFixed(1)}% do investimento em tráfego.`}
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-blue-600">→</span>
-                <span className="text-gray-700">
-                  A venda de gravações aumentou o ticket médio da captação em {formatarDinheiro(calcularFaturamentoGravacoes() / ingressos)} por ingresso.
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-blue-600">→</span>
-                <span className="text-gray-700">
-                  O ticket médio total por lead foi de {formatarDinheiro(calcularFaturamentoTotal() / ingressos)}.
-                </span>
-              </li>
-            </ul>
-          </div>
-        </div>
+<div className="bg-blue-50 p-4 rounded-lg">
+  <h3 className="font-medium mb-3 text-gray-800">Insights</h3>
+  <ul className="space-y-2 text-sm">
+    <li className="flex items-start gap-2">
+      <span className="text-blue-600">→</span>
+      <span className="text-gray-700">
+        {calcularFaturamentoCaptacao() > orcamentoTrafico ? 
+          `A fase de captação já gerou ${formatarDinheiro(calcularFaturamentoCaptacao())}, superando o investimento em tráfego de ${formatarDinheiro(orcamentoTrafico)}.` : 
+          `A fase de captação gerou ${formatarDinheiro(calcularFaturamentoCaptacao())}, representando ${((calcularFaturamentoCaptacao() / orcamentoTrafico) * 100).toFixed(1)}% do investimento em tráfego.`}
+      </span>
+    </li>
+    <li className="flex items-start gap-2">
+      <span className="text-blue-600">→</span>
+      <span className="text-gray-700">
+        A venda de gravações aumentou o ticket médio da captação em {formatarDinheiro(calcularFaturamentoGravacoes() / ingressos)} por ingresso.
+      </span>
+    </li>
+    <li className="flex items-start gap-2">
+      <span className="text-blue-600">→</span>
+      <span className="text-gray-700">
+        Os compradores de gravações converteram {(conversaoCashback / conversaoNormal).toFixed(1)}x mais para o produto principal que não compradores.
+      </span>
+    </li>
+    <li className="flex items-start gap-2">
+      <span className="text-blue-600">→</span>
+      <span className="text-gray-700">
+        {calcularFaturamentoTotal() / ingressos > 100 ? 
+          `O ticket médio por lead foi de ${formatarDinheiro(calcularFaturamentoTotal() / ingressos)}, representando um ótimo valor de cliente.` :
+          `O ticket médio por lead foi de ${formatarDinheiro(calcularFaturamentoTotal() / ingressos)}, pode ser otimizado com ajustes na estratégia de monetização.`}
+      </span>
+    </li>
+  </ul>
+</div>
+</div>
       )}
     </div>
   );
