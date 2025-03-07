@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 
-export default function SimuladorLancamentoPago() {
-  // Estado para armazenar os valores do simulador
+export default function Home() {
+  // Estado para parâmetros básicos
   const [ingressos, setIngressos] = useState(500);
   const [lotes, setLotes] = useState([
     { numero: 1, percentual: 12, preco: 19, nome: "Lote 1" },
@@ -41,32 +41,16 @@ export default function SimuladorLancamentoPago() {
   const [orcamentoTrafico, setOrcamentoTrafico] = useState(30000);
   const [percentualOrganicoIngressos, setPercentualOrganicoIngressos] = useState(35);
   
-  // Estado da aba ativa
+  // Aba ativa
   const [abaAtiva, setAbaAtiva] = useState('parametros');
-  
-  // Calcular tickets médios e totais
-  const calcularTicketMedioIngressos = () => {
-    let total = 0;
-    let quantidade = 0;
-    
-    lotes.forEach(lote => {
-      const lotesVendidos = Math.round(ingressos * (lote.percentual / 100));
-      total += lotesVendidos * lote.preco;
-      quantidade += lotesVendidos;
-    });
-    
-    return quantidade > 0 ? (total / quantidade).toFixed(2) : 0;
-  };
   
   // Calcular faturamento de ingressos
   const calcularFaturamentoIngressos = () => {
     let total = 0;
-    
     lotes.forEach(lote => {
       const lotesVendidos = Math.round(ingressos * (lote.percentual / 100));
       total += lotesVendidos * lote.preco;
     });
-    
     return total;
   };
   
@@ -74,11 +58,6 @@ export default function SimuladorLancamentoPago() {
   const calcularFaturamentoGravacoes = () => {
     const vendasGravacoes = Math.round(ingressos * (conversaoGravacoes / 100));
     return vendasGravacoes * precoGravacoes;
-  };
-  
-  // Calcular faturamento total na captação
-  const calcularFaturamentoCaptacao = () => {
-    return calcularFaturamentoIngressos() + calcularFaturamentoGravacoes();
   };
   
   // Calcular vendas do produto principal
@@ -99,12 +78,7 @@ export default function SimuladorLancamentoPago() {
   // Calcular faturamento do produto principal
   const calcularFaturamentoProdutoPrincipal = () => {
     const vendas = calcularVendasProdutoPrincipal();
-    
-    return (
-      vendas.cashback * precoCashback +
-      vendas.normal * precoProdutoPrincipal +
-      vendas.boleto * precoBoleto
-    );
+    return vendas.cashback * precoCashback + vendas.normal * precoProdutoPrincipal + vendas.boleto * precoBoleto;
   };
   
   // Calcular vendas e faturamento de Order Bumps
@@ -126,11 +100,7 @@ export default function SimuladorLancamentoPago() {
   const calcularVendasUpsell = () => {
     const vendasProdutoPrincipal = calcularVendasProdutoPrincipal().total;
     const vendasUpsell = Math.round(vendasProdutoPrincipal * (conversaoUpsell / 100));
-    
-    return {
-      quantidade: vendasUpsell,
-      faturamento: vendasUpsell * precoUpsell
-    };
+    return { quantidade: vendasUpsell, faturamento: vendasUpsell * precoUpsell };
   };
   
   // Calcular vendas e faturamento de Downsell
@@ -138,73 +108,26 @@ export default function SimuladorLancamentoPago() {
     const vendasProdutoPrincipal = calcularVendasProdutoPrincipal().total;
     const naoCompradores = ingressos - vendasProdutoPrincipal;
     const vendasDownsell = Math.round(naoCompradores * (conversaoDownsell / 100));
-    
-    return {
-      quantidade: vendasDownsell,
-      faturamento: vendasDownsell * precoDownsell
-    };
+    return { quantidade: vendasDownsell, faturamento: vendasDownsell * precoDownsell };
+  };
+  
+  // Calcular faturamento total na captação
+  const calcularFaturamentoCaptacao = () => {
+    return calcularFaturamentoIngressos() + calcularFaturamentoGravacoes();
   };
   
   // Calcular faturamento total
   const calcularFaturamentoTotal = () => {
-    return (
-      calcularFaturamentoCaptacao() +
-      calcularFaturamentoProdutoPrincipal() +
-      calcularVendasOrderBumps().faturamentoTotal +
-      calcularVendasUpsell().faturamento +
-      calcularVendasDownsell().faturamento
-    );
-  };
-  
-  // Calcular CPA (Custo Por Aquisição) de ingresso via tráfego
-  const calcularCPA = () => {
-    const ingressosViaTrafico = Math.round(ingressos * (1 - percentualOrganicoIngressos / 100));
-    return ingressosViaTrafico > 0 ? orcamentoTrafico / ingressosViaTrafico : 0;
+    return calcularFaturamentoCaptacao() + 
+           calcularFaturamentoProdutoPrincipal() + 
+           calcularVendasOrderBumps().faturamentoTotal + 
+           calcularVendasUpsell().faturamento + 
+           calcularVendasDownsell().faturamento;
   };
   
   // Calcular ROAS (Return On Ad Spend)
   const calcularROAS = () => {
     return orcamentoTrafico > 0 ? calcularFaturamentoTotal() / orcamentoTrafico : 0;
-  };
-  
-  // Atualizar percentuais de lotes para sempre somar 100%
-  const atualizarPercentuaisLotes = (index, novoPercentual) => {
-    const novosLotes = [...lotes];
-    const percentualAntigo = novosLotes[index].percentual;
-    const diferenca = novoPercentual - percentualAntigo;
-    
-    // Garantir que o percentual não seja negativo
-    if (novoPercentual < 1) return;
-    
-    novosLotes[index].percentual = novoPercentual;
-    
-    // Ajustar os outros percentuais proporcionalmente
-    const lotesAjustaveis = novosLotes.filter((_, i) => i !== index);
-    const somaOutrosPercentuais = lotesAjustaveis.reduce((soma, lote) => soma + lote.percentual, 0);
-    
-    if (somaOutrosPercentuais + diferenca < 0) return;
-    
-    lotesAjustaveis.forEach((lote, i) => {
-      const peso = lote.percentual / somaOutrosPercentuais;
-      const lotesIndex = i >= index ? i + 1 : i;
-      novosLotes[lotesIndex].percentual = Math.max(1, lote.percentual - (diferenca * peso));
-    });
-    
-    // Garantir que o total seja exatamente 100%
-    const total = novosLotes.reduce((soma, lote) => soma + lote.percentual, 0);
-    if (total !== 100) {
-      const ajuste = (100 - total) / novosLotes.length;
-      novosLotes.forEach((lote) => {
-        lote.percentual += ajuste;
-      });
-    }
-    
-    // Arredondar os percentuais
-    novosLotes.forEach((lote) => {
-      lote.percentual = Math.round(lote.percentual);
-    });
-    
-    setLotes(novosLotes);
   };
   
   // Formatar valor monetário
@@ -218,367 +141,309 @@ export default function SimuladorLancamentoPago() {
   return (
     <div className="p-4 w-full bg-white text-black">
       <div className="mb-6 bg-blue-50 p-4 rounded-lg">
-        <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-          <span role="img" aria-label="calculator">🧮</span>
+        <h1 className="text-2xl font-bold text-gray-800">
           Simulador de Lançamento Pago
         </h1>
-        <p className="text-gray-600 mt-1">Planeje seu lançamento e projete seus resultados com base no Framework Estratégico</p>
+        <p className="text-gray-600 mt-1">Baseado no Framework Estratégico de Lançamento Pago</p>
       </div>
 
       {/* Navegação das Abas */}
       <div className="border-b border-gray-200 mb-6">
-        <nav className="flex flex-wrap space-x-1">
-          <button 
-            onClick={() => setAbaAtiva('parametros')}
-            className={`py-2 px-4 ${abaAtiva === 'parametros' ? 'text-blue-600 border-b-2 border-blue-600 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
-          >
+        <nav className="flex flex-wrap">
+          <button onClick={() => setAbaAtiva('parametros')} className={`py-2 px-4 ${abaAtiva === 'parametros' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}>
             Parâmetros Básicos
           </button>
-          <button 
-            onClick={() => setAbaAtiva('produtos')}
-            className={`py-2 px-4 ${abaAtiva === 'produtos' ? 'text-blue-600 border-b-2 border-blue-600 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
-          >
+          <button onClick={() => setAbaAtiva('produtos')} className={`py-2 px-4 ${abaAtiva === 'produtos' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}>
             Produtos e Conversões
           </button>
-          <button 
-            onClick={() => setAbaAtiva('trafico')}
-            className={`py-2 px-4 ${abaAtiva === 'trafico' ? 'text-blue-600 border-b-2 border-blue-600 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
-          >
+          <button onClick={() => setAbaAtiva('trafico')} className={`py-2 px-4 ${abaAtiva === 'trafico' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}>
             Tráfego e Custos
           </button>
-          <button 
-            onClick={() => setAbaAtiva('resultados')}
-            className={`py-2 px-4 ${abaAtiva === 'resultados' ? 'text-blue-600 border-b-2 border-blue-600 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
-          >
+          <button onClick={() => setAbaAtiva('resultados')} className={`py-2 px-4 ${abaAtiva === 'resultados' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}>
             Resultados
           </button>
         </nav>
       </div>
 
-      {/* Aba de Parâmetros Básicos */}
+      {/* Conteúdo da Aba de Parâmetros Básicos */}
       {abaAtiva === 'parametros' && (
         <div className="space-y-6">
-          <div className="space-y-2 border p-4 rounded-lg shadow-sm">
-            <div className="flex items-center justify-between">
-              <label htmlFor="ingressos" className="text-base font-medium text-gray-700">
-                Total de Ingressos
-              </label>
-              <span className="text-sm text-gray-500">{ingressos} ingressos</span>
+          <div className="border p-4 rounded-lg">
+            <h3 className="text-lg font-medium text-gray-800 mb-3">Total de Ingressos</h3>
+            <div className="flex items-center gap-4">
+              <input
+                type="range"
+                min="100"
+                max="5000"
+                step="50"
+                value={ingressos}
+                onChange={(e) => setIngressos(Number(e.target.value))}
+                className="w-full"
+              />
+              <div className="bg-blue-50 p-2 rounded w-32 text-center text-gray-700">
+                <span className="font-medium">{ingressos}</span> ingressos
+              </div>
             </div>
-            <input
-              id="ingressos"
-              type="range"
-              min={100}
-              max={5000}
-              step={50}
-              value={ingressos}
-              onChange={(e) => setIngressos(Number(e.target.value))}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-            />
           </div>
           
-          <h3 className="text-lg font-medium mt-4 text-gray-800">Distribuição e Preço dos Lotes</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {lotes.map((lote, index) => (
-              <div key={index} className="border rounded-lg p-4 bg-gray-50">
-                <h4 className="font-medium text-blue-800">{lote.nome}</h4>
-                <div className="space-y-2 mt-2">
-                  <div className="flex items-center justify-between">
-                    <label htmlFor={`percentual-${index}`} className="text-sm text-gray-700">
-                      Percentual
-                    </label>
-                    <span className="text-xs text-gray-500">{lote.percentual}%</span>
-                  </div>
+          <div className="mt-6 bg-blue-50 p-4 rounded-lg">
+            <h4 className="font-medium text-gray-800">Resultados de Ingressos</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+              <div>
+                <span className="text-sm text-gray-600">Faturamento Total de Ingressos</span>
+                <p className="text-xl font-bold text-gray-800">{formatarDinheiro(calcularFaturamentoIngressos())}</p>
+              </div>
+              <div>
+                <span className="text-sm text-gray-600">Ticket Médio</span>
+                <p className="text-xl font-bold text-gray-800">{formatarDinheiro(calcularFaturamentoIngressos() / ingressos)}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Conteúdo da Aba de Produtos */}
+      {abaAtiva === 'produtos' && (
+        <div className="space-y-6">
+          {/* Gravações (Order Bump) */}
+          <div className="border p-4 rounded-lg">
+            <h3 className="text-lg font-medium mb-3 text-gray-800">Gravações (Order Bump)</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm text-gray-700 mb-1">Preço das Gravações</label>
+                <div className="flex items-center gap-2">
                   <input
-                    id={`percentual-${index}`}
                     type="number"
                     min="1"
-                    max="100"
-                    value={lote.percentual}
-                    onChange={(e) => atualizarPercentuaisLotes(index, parseInt(e.target.value))}
-                    className="w-full h-8 px-2 border border-gray-300 rounded"
+                    value={precoGravacoes}
+                    onChange={(e) => setPrecoGravacoes(Number(e.target.value))}
+                    className="w-24 p-1 border rounded text-gray-800"
                   />
-                  
-                  <div className="flex items-center justify-between mt-2">
-                    <label htmlFor={`preco-${index}`} className="text-sm text-gray-700">
-                      Preço
-                    </label>
-                    <span className="text-xs text-gray-500">{formatarDinheiro(lote.preco)}</span>
-                  </div>
+                  <span className="text-gray-700">{formatarDinheiro(precoGravacoes)}</span>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm text-gray-700 mb-1">Taxa de Conversão</label>
+                <div className="flex items-center gap-2">
                   <input
-                    id={`preco-${index}`}
-                    type="number"
-                    min="1"
-                    value={lote.preco}
-                    onChange={(e) => {
-                      const novosLotes = [...lotes];
-                      novosLotes[index].preco = parseInt(e.target.value);
-                      setLotes(novosLotes);
-                    }}
-                    className="w-full h-8 px-2 border border-gray-300 rounded"
+                    type="range"
+                    min="0"
+                    max="40"
+                    value={conversaoGravacoes}
+                    onChange={(e) => setConversaoGravacoes(Number(e.target.value))}
+                    className="w-full"
                   />
-                  
-                  <div className="text-sm mt-2">
-                    <span className="font-medium text-gray-700">Vendas: </span>
-                    <span className="text-gray-900">{Math.round(ingressos * (lote.percentual / 100))} ingressos</span>
+                  <span className="w-12 text-center text-gray-700">{conversaoGravacoes}%</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-4 bg-gray-50 p-3 rounded">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <span className="text-sm text-gray-600">Vendas Estimadas</span>
+                  <p className="font-medium text-gray-800">{Math.round(ingressos * (conversaoGravacoes / 100))} unidades</p>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-600">Faturamento</span>
+                  <p className="font-medium text-gray-800">{formatarDinheiro(calcularFaturamentoGravacoes())}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Produto Principal */}
+          <div className="border p-4 rounded-lg">
+            <h3 className="text-lg font-medium mb-3 text-gray-800">Produto Principal</h3>
+            
+            {/* Versão Normal */}
+            <div className="mt-2 border-b pb-4">
+              <h4 className="font-medium text-blue-700">Versão Normal</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                <div>
+                  <label className="block text-sm text-gray-700 mb-1">Preço Normal</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="1"
+                      value={precoProdutoPrincipal}
+                      onChange={(e) => setPrecoProdutoPrincipal(Number(e.target.value))}
+                      className="w-24 p-1 border rounded text-gray-800"
+                    />
+                    <span className="text-gray-700">{formatarDinheiro(precoProdutoPrincipal)}</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-700 mb-1">Taxa de Conversão</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="range"
+                      min="0"
+                      max="30"
+                      value={conversaoNormal}
+                      onChange={(e) => setConversaoNormal(Number(e.target.value))}
+                      className="w-full"
+                    />
+                    <span className="w-12 text-center text-gray-700">{conversaoNormal}%</span>
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-          
-          <div className="mt-4 p-4 border rounded-lg bg-blue-50">
-            <h3 className="text-lg font-medium flex items-center gap-2 text-gray-800">
-              <span role="img" aria-label="dollar">💰</span>
-              Resultados de Ingressos
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
-              <div>
-                <p className="text-sm text-gray-500">Ticket Médio de Ingressos</p>
-                <p className="text-xl font-bold text-gray-900">{formatarDinheiro(calcularTicketMedioIngressos())}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Faturamento Total de Ingressos</p>
-                <p className="text-xl font-bold text-gray-900">{formatarDinheiro(calcularFaturamentoIngressos())}</p>
+            </div>
+            
+            <div className="mt-4 bg-gray-50 p-3 rounded">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <span className="text-sm text-gray-600">Vendas Estimadas</span>
+                  <p className="font-medium text-gray-800">{calcularVendasProdutoPrincipal().total} unidades</p>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-600">Faturamento</span>
+                  <p className="font-medium text-gray-800">{formatarDinheiro(calcularFaturamentoProdutoPrincipal())}</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
       )}
       
-      {/* Aba de Produtos e Conversões */}
-      {abaAtiva === 'produtos' && (
+      {/* Conteúdo da Aba de Tráfego */}
+      {abaAtiva === 'trafico' && (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Order Bump - Gravações */}
-            <div className="border rounded-lg p-4 shadow-sm">
-              <h3 className="text-lg font-medium text-gray-800">Gravações (Order Bump)</h3>
-              <div className="space-y-4 mt-3">
-                <div>
-                  <label htmlFor="preco-gravacoes" className="block text-sm font-medium text-gray-700">Preço das Gravações</label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <input
-                      id="preco-gravacoes"
-                      type="number"
-                      value={precoGravacoes}
-                      onChange={(e) => setPrecoGravacoes(parseInt(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
-                    />
-                    <span className="text-sm text-gray-500 w-32">{formatarDinheiro(precoGravacoes)}</span>
-                  </div>
-                </div>
-                
-                <div>
-                  <div className="flex items-center justify-between">
-                    <label htmlFor="conversao-gravacoes" className="block text-sm font-medium text-gray-700">Taxa de Conversão</label>
-                    <span className="text-sm text-gray-500">{conversaoGravacoes}%</span>
-                  </div>
+          <div className="border p-4 rounded-lg">
+            <h3 className="text-lg font-medium mb-3 text-gray-800">Configuração de Tráfego</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm text-gray-700 mb-1">Orçamento de Tráfego</label>
+                <div className="flex items-center gap-2">
                   <input
-                    id="conversao-gravacoes"
-                    type="range"
-                    min={0}
-                    max={40}
-                    step={1}
-                    value={conversaoGravacoes}
-                    onChange={(e) => setConversaoGravacoes(Number(e.target.value))}
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1"
+                    type="number"
+                    min="0"
+                    step="1000"
+                    value={orcamentoTrafico}
+                    onChange={(e) => setOrcamentoTrafico(Number(e.target.value))}
+                    className="w-32 p-1 border rounded text-gray-800"
                   />
+                  <span className="text-gray-700">{formatarDinheiro(orcamentoTrafico)}</span>
                 </div>
-                
-                <div className="p-3 bg-gray-50 rounded-md">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <p className="text-sm text-gray-500">Vendas Estimadas</p>
-                      <p className="font-medium text-gray-900">{Math.round(ingressos * (conversaoGravacoes / 100))} unidades</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Faturamento</p>
-                      <p className="font-medium text-gray-900">{formatarDinheiro(calcularFaturamentoGravacoes())}</p>
-                    </div>
-                  </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm text-gray-700 mb-1">% Ingressos Orgânicos</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={percentualOrganicoIngressos}
+                    onChange={(e) => setPercentualOrganicoIngressos(Number(e.target.value))}
+                    className="w-full"
+                  />
+                  <span className="w-12 text-center text-gray-700">{percentualOrganicoIngressos}%</span>
                 </div>
               </div>
             </div>
             
-            {/* Produto Principal */}
-            <div className="border rounded-lg p-4 shadow-sm">
-              <h3 className="text-lg font-medium text-gray-800">Produto Principal</h3>
-              <div className="space-y-4 mt-3">
-                {/* Versão Normal */}
+            <div className="mt-6 bg-gray-50 p-4 rounded">
+              <h4 className="font-medium mb-2 text-gray-800">Métricas de Tráfego</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="preco-produto" className="block text-sm font-medium text-gray-700">Preço Normal</label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <input
-                      id="preco-produto"
-                      type="number"
-                      value={precoProdutoPrincipal}
-                      onChange={(e) => setPrecoProdutoPrincipal(parseInt(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
-                    />
-                    <span className="text-sm text-gray-500 w-32">{formatarDinheiro(precoProdutoPrincipal)}</span>
-                  </div>
+                  <span className="text-sm text-gray-600">Ingressos via Tráfego Pago</span>
+                  <p className="font-medium text-gray-800">{Math.round(ingressos * (1 - percentualOrganicoIngressos / 100))}</p>
                 </div>
-                
                 <div>
-                  <div className="flex items-center justify-between">
-                    <label htmlFor="conversao-normal" className="block text-sm font-medium text-gray-700">Conversão Normal</label>
-                    <span className="text-sm text-gray-500">{conversaoNormal}%</span>
-                  </div>
-                  <input
-                    id="conversao-normal"
-                    type="range"
-                    min={0}
-                    max={30}
-                    step={1}
-                    value={conversaoNormal}
-                    onChange={(e) => setConversaoNormal(Number(e.target.value))}
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1"
-                  />
-                </div>
-                
-                {/* Versão com Cashback */}
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <label htmlFor="preco-cashback" className="block text-sm font-medium text-gray-700">Preço com Cashback</label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <input
-                      id="preco-cashback"
-                      type="number"
-                      value={precoCashback}
-                      onChange={(e) => setPrecoCashback(parseInt(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
-                    />
-                    <span className="text-sm text-gray-500 w-32">{formatarDinheiro(precoCashback)}</span>
-                  </div>
-                </div>
-                
-                <div>
-                  <div className="flex items-center justify-between">
-                    <label htmlFor="conversao-cashback" className="block text-sm font-medium text-gray-700">Conversão Cashback</label>
-                    <span className="text-sm text-gray-500">{conversaoCashback}%</span>
-                  </div>
-                  <input
-                    id="conversao-cashback"
-                    type="range"
-                    min={0}
-                    max={50}
-                    step={1}
-                    value={conversaoCashback}
-                    onChange={(e) => setConversaoCashback(Number(e.target.value))}
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1"
-                  />
-                </div>
-                
-                {/* Boleto */}
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <label htmlFor="preco-boleto" className="block text-sm font-medium text-gray-700">Preço Boleto/Parcelado</label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <input
-                      id="preco-boleto"
-                      type="number"
-                      value={precoBoleto}
-                      onChange={(e) => setPrecoBoleto(parseInt(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
-                    />
-                    <span className="text-sm text-gray-500 w-32">{formatarDinheiro(precoBoleto)}</span>
-                  </div>
-                </div>
-                
-                <div>
-                  <div className="flex items-center justify-between">
-                    <label htmlFor="conversao-boleto" className="block text-sm font-medium text-gray-700">Conversão Boleto</label>
-                    <span className="text-sm text-gray-500">{conversaoBoleto}%</span>
-                  </div>
-                  <input
-                    id="conversao-boleto"
-                    type="range"
-                    min={0}
-                    max={10}
-                    step={0.5}
-                    value={conversaoBoleto}
-                    onChange={(e) => setConversaoBoleto(Number(e.target.value))}
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1"
-                  />
-                </div>
-                
-                <div className="p-3 bg-gray-50 rounded-md">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <p className="text-sm text-gray-500">Vendas Estimadas</p>
-                      <p className="font-medium text-gray-900">{calcularVendasProdutoPrincipal().total} unidades</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Faturamento</p>
-                      <p className="font-medium text-gray-900">{formatarDinheiro(calcularFaturamentoProdutoPrincipal())}</p>
-                    </div>
-                  </div>
+                  <span className="text-sm text-gray-600">ROAS</span>
+                  <p className="font-medium text-gray-800">{calcularROAS().toFixed(2)}x</p>
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Conteúdo da Aba de Resultados */}
+      {abaAtiva === 'resultados' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h3 className="font-medium mb-2 text-gray-800">Faturamento Total</h3>
+              <p className="text-2xl font-bold text-blue-700">{formatarDinheiro(calcularFaturamentoTotal())}</p>
+              <p className="text-sm text-gray-600 mt-2">Com {ingressos} ingressos vendidos</p>
+            </div>
             
-            {/* Order Bumps */}
-            <div className="border rounded-lg p-4 shadow-sm">
-              <h3 className="text-lg font-medium text-gray-800">Order Bumps</h3>
-              <div className="space-y-4 mt-3">
-                {/* Order Bump 1 */}
-                <div>
-                  <label htmlFor="preco-ob1" className="block text-sm font-medium text-gray-700">Preço Order Bump 1</label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <input
-                      id="preco-ob1"
-                      type="number"
-                      value={precoOrderBump1}
-                      onChange={(e) => setPrecoOrderBump1(parseInt(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
-                    />
-                    <span className="text-sm text-gray-500 w-32">{formatarDinheiro(precoOrderBump1)}</span>
-                  </div>
-                </div>
-                
-                <div>
-                  <div className="flex items-center justify-between">
-                    <label htmlFor="conversao-ob1" className="block text-sm font-medium text-gray-700">Conversão OB1</label>
-                    <span className="text-sm text-gray-500">{conversaoOrderBump1}%</span>
-                  </div>
-                  <input
-                    id="conversao-ob1"
-                    type="range"
-                    min={0}
-                    max={30}
-                    step={1}
-                    value={conversaoOrderBump1}
-                    onChange={(e) => setConversaoOrderBump1(Number(e.target.value))}
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1"
-                  />
-                </div>
-                
-                {/* Order Bump 2 */}
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <label htmlFor="preco-ob2" className="block text-sm font-medium text-gray-700">Preço Order Bump 2</label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <input
-                      id="preco-ob2"
-                      type="number"
-                      value={precoOrderBump2}
-                      onChange={(e) => setPrecoOrderBump2(parseInt(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
-                    />
-                    <span className="text-sm text-gray-500 w-32">{formatarDinheiro(precoOrderBump2)}</span>
-                  </div>
-                </div>
-                
-                <div>
-                  <div className="flex items-center justify-between">
-                    <label htmlFor="conversao-ob2" className="block text-sm font-medium text-gray-700">Conversão OB2</label>
-                    <span className="text-sm text-gray-500">{conversaoOrderBump2}%</span>
-                  </div>
-                  <input
-                    id="conversao-ob2"
-                    type="range"
-                    min={0}
-                    max={20}
-                    step={1}
-                    value={conversaoOrderBump2}
-                    onChange={(e) => setConversaoOrderBump2(Number(e.target.value))}
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1"
-                  />
-                </div
+            <div className="bg-green-50 p-4 rounded-lg">
+              <h3 className="font-medium mb-2 text-gray-800">Vendas Produto Principal</h3>
+              <p className="text-2xl font-bold text-green-700">{calcularVendasProdutoPrincipal().total}</p>
+              <p className="text-sm text-gray-600 mt-2">Taxa de conversão: {((calcularVendasProdutoPrincipal().total / ingressos) * 100).toFixed(1)}%</p>
+            </div>
+            
+            <div className="bg-purple-50 p-4 rounded-lg">
+              <h3 className="font-medium mb-2 text-gray-800">ROAS</h3>
+              <p className="text-2xl font-bold text-purple-700">{calcularROAS().toFixed(2)}x</p>
+              <p className="text-sm text-gray-600 mt-2">Investimento: {formatarDinheiro(orcamentoTrafico)}</p>
+            </div>
+          </div>
+          
+          <div className="border p-4 rounded-lg">
+            <h3 className="text-lg font-medium mb-3 text-gray-800">Detalhamento de Receita</h3>
+            <div className="space-y-3">
+              <div className="flex justify-between py-2 border-b">
+                <span className="text-gray-700">Faturamento de Ingressos:</span>
+                <span className="font-medium text-gray-800">{formatarDinheiro(calcularFaturamentoIngressos())}</span>
+              </div>
+              <div className="flex justify-between py-2 border-b">
+                <span className="text-gray-700">Faturamento de Gravações:</span>
+                <span className="font-medium text-gray-800">{formatarDinheiro(calcularFaturamentoGravacoes())}</span>
+              </div>
+              <div className="flex justify-between py-2 border-b">
+                <span className="text-gray-700">Faturamento do Produto Principal:</span>
+                <span className="font-medium text-gray-800">{formatarDinheiro(calcularFaturamentoProdutoPrincipal())}</span>
+              </div>
+              <div className="flex justify-between py-2 border-b">
+                <span className="text-gray-700">Faturamento Order Bumps:</span>
+                <span className="font-medium text-gray-800">{formatarDinheiro(calcularVendasOrderBumps().faturamentoTotal)}</span>
+              </div>
+              <div className="flex justify-between py-2 border-b">
+                <span className="text-gray-700">Faturamento Upsell:</span>
+                <span className="font-medium text-gray-800">{formatarDinheiro(calcularVendasUpsell().faturamento)}</span>
+              </div>
+              <div className="flex justify-between py-2 border-b">
+                <span className="text-gray-700">Faturamento Downsell:</span>
+                <span className="font-medium text-gray-800">{formatarDinheiro(calcularVendasDownsell().faturamento)}</span>
+              </div>
+              <div className="flex justify-between py-2 font-bold">
+                <span className="text-gray-800">Faturamento Total:</span>
+                <span className="text-gray-800">{formatarDinheiro(calcularFaturamentoTotal())}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-blue-50 p-4 rounded-lg">
+            <h3 className="font-medium mb-3 text-gray-800">Insights</h3>
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-start gap-2">
+                <span className="text-blue-600">→</span>
+                <span className="text-gray-700">
+                  {calcularFaturamentoCaptacao() > orcamentoTrafico ? 
+                    `A fase de captação já gerou ${formatarDinheiro(calcularFaturamentoCaptacao())}, superando o investimento em tráfego de ${formatarDinheiro(orcamentoTrafico)}.` : 
+                    `A fase de captação gerou ${formatarDinheiro(calcularFaturamentoCaptacao())}, representando ${((calcularFaturamentoCaptacao() / orcamentoTrafico) * 100).toFixed(1)}% do investimento em tráfego.`}
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-blue-600">→</span>
+                <span className="text-gray-700">
+                  A venda de gravações aumentou o ticket médio da captação em {formatarDinheiro(calcularFaturamentoGravacoes() / ingressos)} por ingresso.
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-blue-600">→</span>
+                <span className="text-gray-700">
+                  O ticket médio total por lead foi de {formatarDinheiro(calcularFaturamentoTotal() / ingressos)}.
+                </span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
