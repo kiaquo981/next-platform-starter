@@ -201,320 +201,53 @@ const calcularMetricasTrafico = () => {
     }).format(valor);
   };
 
-{/* Adicione esta seção dentro da aba de Tráfego, após a análise de cenários */}
-<div className="border p-4 rounded-lg mt-6">
-  <h3 className="text-lg font-medium mb-3 text-gray-800">Planejamento de Vendas e Tráfego</h3>
+  const calcularVendasPorCanal = () => {
+  return {
+    trafico: Math.round(ingressos * (percentualVendasTrafico / 100)),
+    conteudo: Math.round(ingressos * (percentualVendasConteudo / 100)),
+    base: Math.round(ingressos * (percentualVendasBase / 100)),
+    outros: Math.round(ingressos * (percentualVendasOutros / 100)),
+  };
+};
+
+const calcularRitmoVendas = () => {
+  const vendasDiarias = ingressos / diasDeVendas;
+  const vendasDiasUteis = ingressos / diasUteis;
+  return {
+    vendasDiarias: Math.round(vendasDiarias),
+    vendasDiasUteis: Math.round(vendasDiasUteis),
+    ritmoMedio: Math.round((vendasDiarias + vendasDiasUteis) / 2)
+  };
+};
+
+const calcularVerbasTrafico = () => {
+  const verbaTotal = orcamentoTrafico;
+  return {
+    trafico: verbaTotal * (percentualVerbaTrafico / 100),
+    distribuicao: verbaTotal * (percentualVerbaDistribuicao / 100),
+    remkt: verbaTotal * (percentualVerbaRemkt / 100),
+    downsell: verbaTotal * (percentualVerbaDownsell / 100),
+    outros: verbaTotal * (percentualVerbaOutros / 100),
+  };
+};
+
+const calcularMetricasTrafico = () => {
+  const views = 1000 / (cpmTrafico / 1000); // Views por real investido
+  const cliques = views * (ctrTrafico / 100);
+  const acessos = cliques * (connectRate / 100);
+  const vendas = acessos * (conversaoPagina / 100);
+  const cpmPorVenda = 1000 / vendas;
+  const custoPorVenda = cpmTrafico / 1000 * cpmPorVenda;
   
-  {/* Planejamento de Dias e Ritmo */}
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-    <div>
-      <h4 className="font-medium text-blue-700 mb-3">Período de Vendas</h4>
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm text-gray-700 mb-1">Dias Totais</label>
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              min="1"
-              value={diasDeVendas}
-              onChange={(e) => setDiasDeVendas(Number(e.target.value))}
-              className="w-20 p-1 border rounded text-gray-800"
-            />
-            <span className="text-gray-700">dias</span>
-          </div>
-        </div>
-        <div>
-          <label className="block text-sm text-gray-700 mb-1">Dias Úteis</label>
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              min="1"
-              value={diasUteis}
-              onChange={(e) => setDiasUteis(Number(e.target.value))}
-              className="w-20 p-1 border rounded text-gray-800"
-            />
-            <span className="text-gray-700">dias</span>
-          </div>
-        </div>
-      </div>
-      
-      <div className="mt-4 bg-gray-50 p-3 rounded">
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <span className="text-sm text-gray-600">Vendas por Dia</span>
-            <p className="font-medium text-gray-800">{calcularRitmoVendas().vendasDiarias}</p>
-          </div>
-          <div>
-            <span className="text-sm text-gray-600">Vendas por Dia Útil</span>
-            <p className="font-medium text-gray-800">{calcularRitmoVendas().vendasDiasUteis}</p>
-          </div>
-          <div className="col-span-2">
-            <span className="text-sm text-gray-600">Ritmo Médio</span>
-            <p className="font-medium text-gray-800">{calcularRitmoVendas().ritmoMedio} ingressos/dia</p>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <div>
-      <h4 className="font-medium text-blue-700 mb-3">Distribuição de Vendas</h4>
-      <div className="space-y-3">
-        <div>
-          <label className="block text-sm text-gray-700 mb-1">Tráfego Pago (%)</label>
-          <div className="flex items-center gap-2">
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={percentualVendasTrafico}
-              onChange={(e) => setPercentualVendasTrafico(Number(e.target.value))}
-              className="w-full"
-            />
-            <span className="w-12 text-center text-gray-700">{percentualVendasTrafico}%</span>
-          </div>
-        </div>
-        <div>
-          <label className="block text-sm text-gray-700 mb-1">Conteúdo Orgânico (%)</label>
-          <div className="flex items-center gap-2">
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={percentualVendasConteudo}
-              onChange={(e) => setPercentualVendasConteudo(Number(e.target.value))}
-              className="w-full"
-            />
-            <span className="w-12 text-center text-gray-700">{percentualVendasConteudo}%</span>
-          </div>
-        </div>
-        <div>
-          <label className="block text-sm text-gray-700 mb-1">Base Própria (%)</label>
-          <div className="flex items-center gap-2">
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={percentualVendasBase}
-              onChange={(e) => setPercentualVendasBase(Number(e.target.value))}
-              className="w-full"
-            />
-            <span className="w-12 text-center text-gray-700">{percentualVendasBase}%</span>
-          </div>
-        </div>
-        <div>
-          <label className="block text-sm text-gray-700 mb-1">Outros (%)</label>
-          <div className="flex items-center gap-2">
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={percentualVendasOutros}
-              onChange={(e) => setPercentualVendasOutros(Number(e.target.value))}
-              className="w-full"
-            />
-            <span className="w-12 text-center text-gray-700">{percentualVendasOutros}%</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  {/* Detalhamento de Vendas */}
-  <div className="bg-gray-50 p-3 rounded mb-6">
-    <h4 className="font-medium mb-2">Vendas por Canal</h4>
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-      <div>
-        <span className="text-sm text-gray-600">Tráfego Pago</span>
-        <p className="font-medium text-gray-800">{calcularVendasPorCanal().trafico} ingressos</p>
-      </div>
-      <div>
-        <span className="text-sm text-gray-600">Conteúdo</span>
-        <p className="font-medium text-gray-800">{calcularVendasPorCanal().conteudo} ingressos</p>
-      </div>
-      <div>
-        <span className="text-sm text-gray-600">Base Própria</span>
-        <p className="font-medium text-gray-800">{calcularVendasPorCanal().base} ingressos</p>
-      </div>
-      <div>
-        <span className="text-sm text-gray-600">Outros</span>
-        <p className="font-medium text-gray-800">{calcularVendasPorCanal().outros} ingressos</p>
-      </div>
-    </div>
-  </div>
-  
-  {/* Configuração detalhada de tráfego */}
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-    <div>
-      <h4 className="font-medium text-blue-700 mb-3">Métricas de Tráfego</h4>
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm text-gray-700 mb-1">CPM (R$)</label>
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              min="1"
-              step="0.1"
-              value={cpmTrafico}
-              onChange={(e) => setCpmTrafico(Number(e.target.value))}
-              className="w-20 p-1 border rounded text-gray-800"
-            />
-          </div>
-        </div>
-        <div>
-          <label className="block text-sm text-gray-700 mb-1">CTR (%)</label>
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              min="0.1"
-              step="0.1"
-              max="10"
-              value={ctrTrafico}
-              onChange={(e) => setCtrTrafico(Number(e.target.value))}
-              className="w-20 p-1 border rounded text-gray-800"
-            />
-          </div>
-        </div>
-        <div>
-          <label className="block text-sm text-gray-700 mb-1">Connect Rate (%)</label>
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              min="1"
-              max="100"
-              value={connectRate}
-              onChange={(e) => setConnectRate(Number(e.target.value))}
-              className="w-20 p-1 border rounded text-gray-800"
-            />
-          </div>
-        </div>
-        <div>
-          <label className="block text-sm text-gray-700 mb-1">Conversão Página (%)</label>
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              min="0.1"
-              step="0.1"
-              max="100"
-              value={conversaoPagina}
-              onChange={(e) => setConversaoPagina(Number(e.target.value))}
-              className="w-20 p-1 border rounded text-gray-800"
-            />
-          </div>
-        </div>
-      </div>
-      
-      <div className="mt-4 bg-gray-50 p-3 rounded">
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <span className="text-sm text-gray-600">Views por Real</span>
-            <p className="font-medium text-gray-800">{calcularMetricasTrafico().views.toFixed(1)}</p>
-          </div>
-          <div>
-            <span className="text-sm text-gray-600">CPM por Venda</span>
-            <p className="font-medium text-gray-800">{calcularMetricasTrafico().cpmPorVenda.toFixed(2)}</p>
-          </div>
-          <div>
-            <span className="text-sm text-gray-600">Custo por Venda</span>
-            <p className="font-medium text-gray-800">{formatarDinheiro(calcularMetricasTrafico().custoPorVenda)}</p>
-          </div>
-          <div>
-            <span className="text-sm text-gray-600">CPA Projetado</span>
-            <p className="font-medium text-gray-800">{formatarDinheiro(calcularVerbasTrafico().trafico / calcularVendasPorCanal().trafico)}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <div>
-      <h4 className="font-medium text-blue-700 mb-3">Distribuição de Verba</h4>
-      <div className="space-y-3">
-        <div>
-          <label className="block text-sm text-gray-700 mb-1">Tráfego (%)</label>
-          <div className="flex items-center gap-2">
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={percentualVerbaTrafico}
-              onChange={(e) => setPercentualVerbaTrafico(Number(e.target.value))}
-              className="w-full"
-            />
-            <span className="w-12 text-center text-gray-700">{percentualVerbaTrafico}%</span>
-          </div>
-        </div>
-        <div>
-          <label className="block text-sm text-gray-700 mb-1">Distribuição (%)</label>
-          <div className="flex items-center gap-2">
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={percentualVerbaDistribuicao}
-              onChange={(e) => setPercentualVerbaDistribuicao(Number(e.target.value))}
-              className="w-full"
-            />
-            <span className="w-12 text-center text-gray-700">{percentualVerbaDistribuicao}%</span>
-          </div>
-        </div>
-        <div>
-          <label className="block text-sm text-gray-700 mb-1">Remarketing (%)</label>
-          <div className="flex items-center gap-2">
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={percentualVerbaRemkt}
-              onChange={(e) => setPercentualVerbaRemkt(Number(e.target.value))}
-              className="w-full"
-            />
-            <span className="w-12 text-center text-gray-700">{percentualVerbaRemkt}%</span>
-          </div>
-        </div>
-        <div>
-          <label className="block text-sm text-gray-700 mb-1">Outros (%)</label>
-          <div className="flex items-center gap-2">
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={percentualVerbaOutros}
-              onChange={(e) => setPercentualVerbaOutros(Number(e.target.value))}
-              className="w-full"
-            />
-            <span className="w-12 text-center text-gray-700">{percentualVerbaOutros}%</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  {/* Resumo de Verba */}
-  <div className="bg-gray-50 p-3 rounded">
-    <h4 className="font-medium mb-2">Distribuição Orçamentária</h4>
-    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-      <div>
-        <span className="text-sm text-gray-600">Tráfego</span>
-        <p className="font-medium text-gray-800">{formatarDinheiro(calcularVerbasTrafico().trafico)}</p>
-      </div>
-      <div>
-        <span className="text-sm text-gray-600">Distribuição</span>
-        <p className="font-medium text-gray-800">{formatarDinheiro(calcularVerbasTrafico().distribuicao)}</p>
-      </div>
-      <div>
-        <span className="text-sm text-gray-600">Remarketing</span>
-        <p className="font-medium text-gray-800">{formatarDinheiro(calcularVerbasTrafico().remkt)}</p>
-      </div>
-      <div>
-        <span className="text-sm text-gray-600">Downsell</span>
-        <p className="font-medium text-gray-800">{formatarDinheiro(calcularVerbasTrafico().downsell)}</p>
-      </div>
-      <div>
-        <span className="text-sm text-gray-600">Outros</span>
-        <p className="font-medium text-gray-800">{formatarDinheiro(calcularVerbasTrafico().outros)}</p>
-      </div>
-    </div>
-  </div>
-</div>
+  return {
+    views,
+    cliques,
+    acessos,
+    vendas,
+    cpmPorVenda,
+    custoPorVenda
+  };
+};
   
   return (
     <div className="p-4 w-full bg-white text-black">
@@ -1116,6 +849,334 @@ const calcularMetricasTrafico = () => {
         </div>
       )}
 
+<div className="border p-4 rounded-lg mt-6">
+  <h3 className="text-lg font-medium mb-3 text-gray-800">Planejamento de Vendas e Tráfego</h3>
+  
+  {/* Planejamento de Dias e Ritmo */}
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+    <div>
+      <h4 className="font-medium text-blue-700 mb-3">Período de Vendas</h4>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm text-gray-700 mb-1">Dias Totais</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min="1"
+              value={diasDeVendas}
+              onChange={(e) => setDiasDeVendas(Number(e.target.value))}
+              className="w-20 p-1 border rounded text-gray-800"
+            />
+            <span className="text-gray-700">dias</span>
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm text-gray-700 mb-1">Dias Úteis</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min="1"
+              value={diasUteis}
+              onChange={(e) => setDiasUteis(Number(e.target.value))}
+              className="w-20 p-1 border rounded text-gray-800"
+            />
+            <span className="text-gray-700">dias</span>
+          </div>
+        </div>
+      </div>
+      
+      <div className="mt-4 bg-gray-50 p-3 rounded">
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <span className="text-sm text-gray-600">Vendas por Dia</span>
+            <p className="font-medium text-gray-800">{calcularRitmoVendas().vendasDiarias}</p>
+          </div>
+          <div>
+            <span className="text-sm text-gray-600">Vendas por Dia Útil</span>
+            <p className="font-medium text-gray-800">{calcularRitmoVendas().vendasDiasUteis}</p>
+          </div>
+          <div className="col-span-2">
+            <span className="text-sm text-gray-600">Ritmo Médio</span>
+            <p className="font-medium text-gray-800">{calcularRitmoVendas().ritmoMedio} ingressos/dia</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div>
+      <h4 className="font-medium text-blue-700 mb-3">Distribuição de Vendas</h4>
+      <div className="space-y-3">
+        <div>
+          <label className="block text-sm text-gray-700 mb-1">Tráfego Pago (%)</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={percentualVendasTrafico}
+              onChange={(e) => setPercentualVendasTrafico(Number(e.target.value))}
+              className="w-full"
+            />
+            <span className="w-12 text-center text-gray-700">{percentualVendasTrafico}%</span>
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm text-gray-700 mb-1">Conteúdo Orgânico (%)</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={percentualVendasConteudo}
+              onChange={(e) => setPercentualVendasConteudo(Number(e.target.value))}
+              className="w-full"
+            />
+            <span className="w-12 text-center text-gray-700">{percentualVendasConteudo}%</span>
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm text-gray-700 mb-1">Base Própria (%)</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={percentualVendasBase}
+              onChange={(e) => setPercentualVendasBase(Number(e.target.value))}
+              className="w-full"
+            />
+            <span className="w-12 text-center text-gray-700">{percentualVendasBase}%</span>
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm text-gray-700 mb-1">Outros (%)</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={percentualVendasOutros}
+              onChange={(e) => setPercentualVendasOutros(Number(e.target.value))}
+              className="w-full"
+            />
+            <span className="w-12 text-center text-gray-700">{percentualVendasOutros}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  {/* Detalhamento de Vendas */}
+  <div className="bg-gray-50 p-3 rounded mb-6">
+    <h4 className="font-medium mb-2">Vendas por Canal</h4>
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div>
+        <span className="text-sm text-gray-600">Tráfego Pago</span>
+        <p className="font-medium text-gray-800">{calcularVendasPorCanal().trafico} ingressos</p>
+      </div>
+      <div>
+        <span className="text-sm text-gray-600">Conteúdo</span>
+        <p className="font-medium text-gray-800">{calcularVendasPorCanal().conteudo} ingressos</p>
+      </div>
+      <div>
+        <span className="text-sm text-gray-600">Base Própria</span>
+        <p className="font-medium text-gray-800">{calcularVendasPorCanal().base} ingressos</p>
+      </div>
+      <div>
+        <span className="text-sm text-gray-600">Outros</span>
+        <p className="font-medium text-gray-800">{calcularVendasPorCanal().outros} ingressos</p>
+      </div>
+    </div>
+  </div>
+  
+  {/* Configuração detalhada de tráfego */}
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+    <div>
+      <h4 className="font-medium text-blue-700 mb-3">Métricas de Tráfego</h4>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm text-gray-700 mb-1">CPM (R$)</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min="1"
+              step="0.1"
+              value={cpmTrafico}
+              onChange={(e) => setCpmTrafico(Number(e.target.value))}
+              className="w-20 p-1 border rounded text-gray-800"
+            />
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm text-gray-700 mb-1">CTR (%)</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min="0.1"
+              step="0.1"
+              max="10"
+              value={ctrTrafico}
+              onChange={(e) => setCtrTrafico(Number(e.target.value))}
+              className="w-20 p-1 border rounded text-gray-800"
+            />
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm text-gray-700 mb-1">Connect Rate (%)</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min="1"
+              max="100"
+              value={connectRate}
+              onChange={(e) => setConnectRate(Number(e.target.value))}
+              className="w-20 p-1 border rounded text-gray-800"
+            />
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm text-gray-700 mb-1">Conversão Página (%)</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min="0.1"
+              step="0.1"
+              max="100"
+              value={conversaoPagina}
+              onChange={(e) => setConversaoPagina(Number(e.target.value))}
+              className="w-20 p-1 border rounded text-gray-800"
+            />
+          </div>
+        </div>
+      </div>
+      
+      <div className="mt-4 bg-gray-50 p-3 rounded">
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <span className="text-sm text-gray-600">Views por Real</span>
+            <p className="font-medium text-gray-800">{calcularMetricasTrafico().views.toFixed(1)}</p>
+          </div>
+          <div>
+            <span className="text-sm text-gray-600">CPM por Venda</span>
+            <p className="font-medium text-gray-800">{calcularMetricasTrafico().cpmPorVenda.toFixed(2)}</p>
+          </div>
+          <div>
+            <span className="text-sm text-gray-600">Custo por Venda</span>
+            <p className="font-medium text-gray-800">{formatarDinheiro(calcularMetricasTrafico().custoPorVenda)}</p>
+          </div>
+          <div>
+            <span className="text-sm text-gray-600">CPA Projetado</span>
+            <p className="font-medium text-gray-800">{formatarDinheiro(calcularVerbasTrafico().trafico / calcularVendasPorCanal().trafico)}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div>
+      <h4 className="font-medium text-blue-700 mb-3">Distribuição de Verba</h4>
+      <div className="space-y-3">
+        <div>
+          <label className="block text-sm text-gray-700 mb-1">Tráfego (%)</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={percentualVerbaTrafico}
+              onChange={(e) => setPercentualVerbaTrafico(Number(e.target.value))}
+              className="w-full"
+            />
+            <span className="w-12 text-center text-gray-700">{percentualVerbaTrafico}%</span>
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm text-gray-700 mb-1">Distribuição (%)</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={percentualVerbaDistribuicao}
+              onChange={(e) => setPercentualVerbaDistribuicao(Number(e.target.value))}
+              className="w-full"
+            />
+            <span className="w-12 text-center text-gray-700">{percentualVerbaDistribuicao}%</span>
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm text-gray-700 mb-1">Remarketing (%)</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={percentualVerbaRemkt}
+              onChange={(e) => setPercentualVerbaRemkt(Number(e.target.value))}
+              className="w-full"
+            />
+            <span className="w-12 text-center text-gray-700">{percentualVerbaRemkt}%</span>
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm text-gray-700 mb-1">Downsell (%)</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={percentualVerbaDownsell}
+              onChange={(e) => setPercentualVerbaDownsell(Number(e.target.value))}
+              className="w-full"
+            />
+            <span className="w-12 text-center text-gray-700">{percentualVerbaDownsell}%</span>
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm text-gray-700 mb-1">Outros (%)</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={percentualVerbaOutros}
+              onChange={(e) => setPercentualVerbaOutros(Number(e.target.value))}
+              className="w-full"
+            />
+            <span className="w-12 text-center text-gray-700">{percentualVerbaOutros}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  {/* Resumo de Verba */}
+  <div className="bg-gray-50 p-3 rounded">
+    <h4 className="font-medium mb-2">Distribuição Orçamentária</h4>
+    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div>
+        <span className="text-sm text-gray-600">Tráfego</span>
+        <p className="font-medium text-gray-800">{formatarDinheiro(calcularVerbasTrafico().trafico)}</p>
+      </div>
+      <div>
+        <span className="text-sm text-gray-600">Distribuição</span>
+        <p className="font-medium text-gray-800">{formatarDinheiro(calcularVerbasTrafico().distribuicao)}</p>
+      </div>
+      <div>
+        <span className="text-sm text-gray-600">Remarketing</span>
+        <p className="font-medium text-gray-800">{formatarDinheiro(calcularVerbasTrafico().remkt)}</p>
+      </div>
+      <div>
+        <span className="text-sm text-gray-600">Downsell</span>
+        <p className="font-medium text-gray-800">{formatarDinheiro(calcularVerbasTrafico().downsell)}</p>
+      </div>
+      <div>
+        <span className="text-sm text-gray-600">Outros</span>
+        <p className="font-medium text-gray-800">{formatarDinheiro(calcularVerbasTrafico().outros)}</p>
+      </div>
+    </div>
+  </div>
+</div>      
+      
       {/* Conteúdo da Aba de Resultados */}
       {abaAtiva === 'resultados' && (
         <div className="space-y-6">
